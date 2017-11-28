@@ -11,7 +11,7 @@
 /* TODO
 	Precedenci analyza: cca 85% Dodelat deleni, vyladit mouchy, spravne navazat na tokeny z lexeru, spravne navazat generovani insturkci, overit jestli je precedenci tabulka OK
 						spravne navazat na tabulku symbolu implementovanou jako bin. strom
-	LL Gramatika: 0%
+	LL Gramatika: 30%
 */
 #include <stdio.h>
 #include <ctype.h>
