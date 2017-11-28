@@ -20,7 +20,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "lexer.c"
+#include "lexer.h"
 #include "parser.h"
 #include "string.h"
 #include "listinstr.h"
@@ -29,6 +29,8 @@
 
 int counterVar = 1;
 tListOfInstr *list; // glob. prom. pro seznam instrukci
+tBSTNodePtr *TbSmBST;   // glob. prom. uchovavajici tabulku symbolu
+string attr;
 
 
 int generateVariable(string *var) {
@@ -863,5 +865,525 @@ int getExpr(tData **output)
 }
 
 // KONEC PSA (konecne)
+/////////////////////////
+// LL GRAMATIKA
+
+//2.	<dcllist> ->  <declarefunc> <dclist>
+//3.	<dcllist> ->  ε					
+//4.	<declarefunc> -> ε 
+//5.	<declarefunc> -> declare function id (<funcparam>) as <type> EOL
+//6.	<declarefunc> -> function id (<funcparam>) as <type> EOL <statements> end function EOL
+
+int declrList()
+{
+	int result = 0;
+	if (strCmpConstStr(&attr, "declare") == 0) // declare
+	{
+		if ((token = getNextToken(&attr)) == ER_LEX) // declare function
+		{
+			return ER_LEX;
+		}
+		else if (token == ER_INT) 
+		{
+			return ER_INT;
+		}
+
+		if (strCmpConstStr(&attr, "function") == 0) 
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			if (token != ID)
+			{
+				return ER_SYN;
+			}
+
+			string id;
+			if (strInit(&id))
+			{
+ 				return ER_INT;
+			}
+
+			if (strCopyString(&id, &attr))
+			{
+				return ER_INT;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id (
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (token != LEFT_BRACKET)
+			{
+				strFree(&id);
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id ( param...
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (token == ID)
+			{
+				result = funcParam();
+				if (result != SYNTAX_OK)
+				{
+					return result;
+				}
+
+				if ((token = getNextToken(&attr)) == ER_LEX) // declare function id ( param )
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if (token == ER_INT) 
+				{
+					strFree(&id);
+					return ER_INT;
+				}
+
+				if (token != RIGHT_BRACKET)
+				{
+					strFree(&id);
+					return ER_SYN;
+				}
+			}
+			else if (token != RIGHT_BRACKET) // declare function id ()
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id (param/bez) as
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "as") == 0)
+			{
+				if ((token = getNextToken(&attr)) == ER_LEX) // declare function id (param/bez) as type
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if(token == ER_INT)
+				{
+					strFree(&id);
+					return ER_INT;
+				}				
+				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
+				{
+					if (( result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "double") == 0)) // double
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_DBL)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "string") == 0)) // string
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_STR)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else
+				return ER_SYN;
+			}
+
+			else
+			{
+				strFree(&id);
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id (param/bez) as type EOL
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token urci co bude dal
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			return declrList();
+		}
+
+	}
+
+	else if (strCmpConstStr(&attr, "function") == 0) 
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			if (token != ID)
+			{
+				return ER_SYN;
+			}
+
+			string id;
+			if (strInit(&id))
+			{
+ 				return ER_INT;
+			}
+
+			if (strCopyString(&id, &attr))
+			{
+				return ER_INT;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id (
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (token != LEFT_BRACKET)
+			{
+				strFree(&id);
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id ( param...
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (token == ID)
+			{
+				result = funcParam();
+				if (result != SYNTAX_OK)
+				{
+					return result;
+				}
+
+				if ((token = getNextToken(&attr)) == ER_LEX) // function id ( param )
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if (token == ER_INT) 
+				{
+					strFree(&id);
+					return ER_INT;
+				}
+
+				if (token != RIGHT_BRACKET)
+				{
+					strFree(&id);
+					return ER_SYN;
+				}
+			}
+			else if (token != RIGHT_BRACKET) //  function id ()
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) //  function id (param/bez) as
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "as") == 0)
+			{
+				if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if(token == ER_INT)
+				{
+					strFree(&id);
+					return ER_INT;
+				}				
+				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
+				{
+					if ((result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "double") == 0)) // double
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_DBL)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "string") == 0)) // string
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_STR)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else
+				return ER_SYN;
+			}
+
+			else
+			{
+				strFree(&id);
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type EOL
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type EOL statements
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			result = statements();
+
+			if (result != SYNTAX_OK)
+			{
+				return result;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type EOL statements end
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "end") == 0)
+			{
+				if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type EOL statements end function
+				{
+					return ER_LEX;
+				}
+				else if (token == ER_INT) 
+				{
+					return ER_INT;
+				}
+
+				if (strCmpConstStr(&attr, "function") == 0)
+				{
+					if ((token = getNextToken(&attr)) == ER_LEX) // function id (param/bez) as type EOL statements end function EOL
+					{
+						return ER_LEX;
+					}
+					else if (token == ER_INT) 
+					{
+						return ER_INT;
+					}
+
+					if (token != EOL)
+					{
+						return ER_SYN;
+					}
+
+					if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token urci co bude dal
+					{
+						return ER_LEX;
+					}
+					else if (token == ER_INT) 
+					{
+						return ER_INT;
+					}
+
+					return declrList();
+				}
+				else
+				{
+					return ER_SYN;
+				}
+			}
+			else
+			{
+				return ER_SYN;
+			}
+
+		}
+	else if (strCmpConstStr(&attr, "scope") == 0)
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token urci co bude dal
+			{
+				return ER_LEX;
+			}
+				else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+
+			return SYNTAX_OK;
+		}
+	else
+	{
+		return ER_SYN;
+	}
+}
+
+
+
+
+// 1.	<prog> -> <dcllist> <body>
+int program()
+{
+	int result = 0;
+	switch (token)
+	{
+		case KEYWORD:  
+		if ((strCmpConstStr(&attr, "declare") == 0) || (strCmpConstStr(&attr, "scope") == 0) )
+		{
+			result = declrList();
+			if (result != SYNTAX_OK)
+			{
+				return result;
+			}
+			result = mainList();
+			if (result != SYNTAX_OK)
+			{
+				return result;
+			}
+			/*
+			if (token != tEOF) return ER_SYN;
+
+			if(generateInstruction(I_STOP, NULL, NULL, NULL))
+			{
+				return INTER_ERROR;
+			}
+*/
+			return SYNTAX_OK;
+		}
+		break;
+
+		default:
+		return ER_SYN;
+		break;
+	}
+	return ER_SYN;
+}
 
 
