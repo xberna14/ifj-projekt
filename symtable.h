@@ -37,9 +37,6 @@ typedef struct symtab_elem_t {
     st_elemtype_t elem_type;
     st_datatype_t data_type;
     st_value_t value;
-    bool declared;
-    bool initialized;
-    bool is_global;
     struct symtab_elem_t *first_param;
     struct symtab_elem_t *last_param;
     struct symtab_elem_t *next_param;
