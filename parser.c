@@ -11,7 +11,7 @@
 /* TODO
 	Precedenci analyza: cca 85% Dodelat deleni, vyladit mouchy, spravne navazat na tokeny z lexeru, spravne navazat generovani insturkci, overit jestli je precedenci tabulka OK
 						spravne navazat na tabulku symbolu implementovanou jako bin. strom
-	LL Gramatika: 30%
+	LL Gramatika: 50%
 */
 #include <stdio.h>
 #include <ctype.h>
@@ -30,8 +30,8 @@
 int counterVar = 1;
 tListOfInstr *list; // glob. prom. pro seznam instrukci
 tBSTNodePtr *TbSmBST;   // glob. prom. uchovavajici tabulku symbolu
-string attr;
-
+string attr; // glob. prom. pro aktualni atribut tokenu
+Token_t token; // glob. prom. pro aktualni token
 
 int generateVariable(string *var) {
 // generuje jedinecne nazvy identifikatoru
@@ -149,7 +149,7 @@ unsigned int indexing (int i) {
 
 prvkyPT getPrvek(int i, int j)
 {
-	return PTAB [indexing(i)][indexing(j)];
+	return PTAB [indexing(j)][indexing(i)];
 }
 
 char cnst;
@@ -442,7 +442,7 @@ int getExpr(tData **output)
 	do
 	{
 		b = STop_Term(&s); //znak ze zasobniku
-    	switch (ClenTab(b.type,a.type)) //vyber clena tabulky
+    	switch (getPrvek(b.type,a.type)) //vyber clena tabulky
     	{
 			case TAB_Rovno: // push(a), precist symbol a ze vstupu
 			SPush(&s, a.type, varinfo);
@@ -945,27 +945,10 @@ int declrList()
 
 			if (token == ID)
 			{
-				result = funcParam();
+				result = funcParam(); // po ukonceni funkce bude v tokenu )
 				if (result != SYNTAX_OK)
 				{
 					return result;
-				}
-
-				if ((token = getNextToken(&attr)) == ER_LEX) // declare function id ( param )
-				{
-					strFree(&id);
-					return ER_LEX;
-				}
-				else if (token == ER_INT) 
-				{
-					strFree(&id);
-					return ER_INT;
-				}
-
-				if (token != RIGHT_BRACKET)
-				{
-					strFree(&id);
-					return ER_SYN;
 				}
 			}
 			else if (token != RIGHT_BRACKET) // declare function id ()
@@ -1134,27 +1117,10 @@ int declrList()
 
 			if (token == ID)
 			{
-				result = funcParam();
+				result = funcParam(); // po ukonceni funkce bude v tokenu )
 				if (result != SYNTAX_OK)
 				{
 					return result;
-				}
-
-				if ((token = getNextToken(&attr)) == ER_LEX) // function id ( param )
-				{
-					strFree(&id);
-					return ER_LEX;
-				}
-				else if (token == ER_INT) 
-				{
-					strFree(&id);
-					return ER_INT;
-				}
-
-				if (token != RIGHT_BRACKET)
-				{
-					strFree(&id);
-					return ER_SYN;
 				}
 			}
 			else if (token != RIGHT_BRACKET) //  function id ()
@@ -1345,7 +1311,464 @@ int declrList()
 	}
 }
 
+//7.	<funcparam> -> id as <type> <funcparam_n> 
+//8.	<funcparam> -> ε
+//9.	<funcparam_n> -> ε
+//10.	<funcparam_n> -> , id as <type> <funcparam_n>
+int funcParam()
+{
+	if (token == ID)
+	{
+	string id;
+	if (strInit(&id))
+	{
+ 		return ER_INT;
+	}
 
+	if (strCopyString(&id, &attr))
+	{
+		return ER_INT;
+	}
+
+	if ((token = getNextToken(&attr)) == ER_LEX) // id as
+	{
+		strFree(&id);
+		return ER_LEX;
+	}
+	else if (token == ER_INT) 
+	{
+		strFree(&id);
+		return ER_INT;
+	}
+
+	if (strCmpConstStr(&attr, "as") == 0)
+	{
+		if ((token = getNextToken(&attr)) == ER_LEX) // id as type
+		{
+			strFree(&id);
+			return ER_LEX;
+		}
+		else if(token == ER_INT)
+		{
+			strFree(&id);
+			return ER_INT;
+		}
+
+				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
+				{
+					if ((result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "double") == 0)) // double
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_DBL)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else if ((strCmpConstStr(&attr, "string") == 0)) // string
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_STR)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+					strFree(&id);
+				}
+				else
+				return ER_SYN;
+
+		if ((token = getNextToken(&attr)) == ER_LEX) // urcime co bude dal
+		{
+			return ER_LEX;
+		}
+		else if(token == ER_INT)
+		{
+			return ER_INT;
+		}
+
+		if (token == COMMA) // nasleduje dalsi param
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // , id
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				return ER_INT;
+			}
+			return = funcParam();
+		}
+		else if (token == RIGHT_BRACKET) // zadny dalsi param
+		{
+			return SYNTAX_OK;
+		}
+		else
+		{
+			return ER_SYN;
+		}
+	}
+	else
+	{
+		return ER_SYN;
+	}
+	} // end if (token == id)
+	else
+	{
+		return ER_SYN;
+	}
+}
+
+
+//12.	<statements> -> ε
+//13.	<statements> -> <statement> <stlist>
+//14.	<stlist> -> <statement> <stlist>
+//15.	<stlist> -> ε
+int statements()
+{
+	int result = 0;
+	result = statement(); // zpracujeme prvni statement
+	if (result != SYNTAX_OK)
+	{
+		return result;
+	}
+
+/*	if ((token = getNextToken(&attr)) == ER_LEX) // musi nasledovat EOL, pokud nasleduje = jde o definici promenne
+	{
+		return ER_LEX;
+	}
+	else if (token == ER_INT) 
+	{
+		return ER_INT;
+	}
+
+	if (token == EQUAL)
+	{
+
+		
+	}
+
+	if (token != EOL)
+	{
+		return ER_SYN;
+	} */
+
+	if ((token = getNextToken(&attr)) == ER_LEX) // zjistim zda nasleduje dalsi statement
+	{
+		return ER_LEX;
+	}
+	else if (token == ER_INT) 
+	{
+		return ER_INT;
+	}
+
+	if ((strCmpConstStr(&attr, "end") == 0) || ((strCmpConstStr(&attr, "loop") == 0)) || ((strCmpConstStr(&attr, "else") == 0))) // v tokenu je end, else nebo loop, statements konci
+	{
+		return SYNTAX_OK;
+	}
+
+	else if ((token == KEYWORD) || (token == ID)) // dalsi token je statement
+	{
+		return statements();
+	}
+	else
+	{
+		return ER_SYN;
+	}
+
+}
+
+
+/*
+16.	<statement> -> dim id as <type> EOL
+17.	<statement> -> dim id as <type> = expr EOL
+18.	<statement> -> id = expr EOL
+19.	<statement> -> input id EOL
+20.	<statement> -> print <exlist_n> EOL
+21.	<statement> -> if expr then EOL <statements> else EOL <statements> end if EOL
+22.	<statement> -> do while expr EOL <statements> loop EOL
+23.	<statement> -> id = id_funkce (<in_param>) EOL
+
+*/
+int statement()
+{
+	if (token == ID) // prirazeni do prom
+	{
+
+		tData *data;
+		tData *data1;
+      	if ((data = BSTSearch(TbSmBST, &attr)) == NULL) // podivame se zda promenna existuje
+      	{
+      		return ER_SEM_P;
+      	}
+
+
+		if ((token = getNextToken(&attr)) == ER_LEX) // id =
+		{
+			return ER_LEX;
+		}
+		else if (token == ER_INT)
+		{
+			return ER_INT;
+		}
+
+		if (token != EQUAL)
+		{
+			return ER_SYN;
+		}
+
+		if ((token = getNextToken(&attr)) == ER_LEX) // ziskame dalsi token
+		{
+			return ER_LEX;
+		}
+		else if (token == ER_INT)
+		{
+			return ER_INT;
+		}
+// TODO
+		// if expr
+		return assignment(&data,&data1);
+		// else je to id funkce
+	}
+
+	else if (token == KEYWORD)
+	{
+		
+		if ((strCmpConstStr(&attr, "dim") == 0)) // dim
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // dim id
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT)
+			{
+				return ER_INT;
+			}
+			if (token != ID)
+			{
+				return ER_SYN;
+			}
+			
+			string id;
+			if (strInit(&id))
+			{
+ 				return ER_INT;
+			}
+
+			if (strCopyString(&id, &attr))
+			{
+				return ER_INT;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // dim id as
+			{
+				strFree(&id);
+				return ER_LEX;
+			}
+			else if (token == ER_INT) 
+			{
+				strFree(&id);
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "as") == 0)
+			{
+				if ((token = getNextToken(&attr)) == ER_LEX) // dim id as type
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if(token == ER_INT)
+				{
+					strFree(&id);
+					return ER_INT;
+				}
+
+				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
+				{
+					if ((result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+				}
+				else if ((strCmpConstStr(&attr, "double") == 0)) // double
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_DBL)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+				}
+				else if ((strCmpConstStr(&attr, "string") == 0)) // string
+				{
+					if ((BSTInsert (TbSmBST, &id, TYPE_STR)) == -1 )
+					{
+						strFree(&id);
+						return ER_SEM_O;
+					}
+					else if ( result != 0 )
+					{
+						strFree(&id);
+						return ER_INT;
+					}
+				}
+				else
+				{
+					strFree(&id);
+					return ER_SYN;
+				}
+
+				if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token, bud EOL nebo =
+				{
+					strFree(&id);
+					return ER_LEX;
+				}
+				else if (token == ER_INT)
+				{
+					strFree(&id);
+					return ER_INT;
+				}
+
+				if (token == EOL)
+				{
+					strFree(&id);
+					return SYNTAX_OK;
+				}
+				else if (token == EQUAL)
+				{
+					tData *data;
+					tData *data1;
+      				if ((data = BSTSearch(TbSmBST, &id)) == NULL) // podivame se zda promenna existuje, mela by, prave sme ji vytvorili
+      				{
+      					return ER_SEM_P;
+      				}
+
+      				if ((token = getNextToken(&attr)) == ER_LEX) // ziskame dalsi token - musi byt vyraz
+					{
+						return ER_LEX;
+					}
+					else if (token == ER_INT)
+					{
+						return ER_INT;
+					}
+					return assignment(&data,&data1);
+
+				}
+				else
+				{
+					return ER_SYN;
+				}
+			}
+			else
+			{
+				strFree(&id);
+				return ER_SYN;
+			}
+		}
+		
+
+		else if ((strCmpConstStr(&attr, "input") == 0))
+		{
+
+		}
+
+		else if ((strCmpConstStr(&attr, "print") == 0))
+		{
+
+		}
+
+		else if ((strCmpConstStr(&attr, "if") == 0))
+		{
+
+		}
+
+		else if ((strCmpConstStr(&attr, "do") == 0))
+		{
+
+		}
+	
+		
+	
+		else
+		{	
+			return ER_SYN;
+		}		
+		
+
+	}
+
+
+}
+
+
+// prirazeni do prom
+int assignment(tData **var1,tData **var2)
+{
+	int ret;
+	if ((ret = getExpr(var2)) != 0)
+	{
+		return ret;
+	}
+	if (generateInstruction(I_ASSIGN, *var1, *var2, NULL))
+	{
+		return ER_INT;
+	}
+
+	if ((token = getNextToken(&attr)) == ER_LEX) // EOL
+	{
+		return ER_LEX;
+	}
+	else if (token == ER_INT)
+	{
+		return ER_INT;
+	}
+
+	if (token != EOL)
+	{
+		return ER_SYN;
+	}
+
+	return 0;
+}
+
+
+// 11.	<body> -> Scope <statements> end scope EOL
+int mainList()
+{
+
+}
 
 
 // 1.	<prog> -> <dcllist> <body>
@@ -1355,7 +1778,7 @@ int program()
 	switch (token)
 	{
 		case KEYWORD:  
-		if ((strCmpConstStr(&attr, "declare") == 0) || (strCmpConstStr(&attr, "scope") == 0) )
+		if ((strCmpConstStr(&attr, "declare") == 0) || (strCmpConstStr(&attr, "function") == 0) || (strCmpConstStr(&attr, "scope") == 0))
 		{
 			result = declrList();
 			if (result != SYNTAX_OK)
@@ -1372,7 +1795,7 @@ int program()
 
 			if(generateInstruction(I_STOP, NULL, NULL, NULL))
 			{
-				return INTER_ERROR;
+				return ER_INT;
 			}
 */
 			return SYNTAX_OK;
@@ -1386,4 +1809,30 @@ int program()
 	return ER_SYN;
 }
 
+
+// parser, bere na vstup tabulku symbolu a seznam instrukci
+int parse(tBSTNodePtr *tb, tListOfInstr *instrList) 
+{
+	int result = 0;
+	TbSmBST = tb;
+	list = instrList;
+	if (strInit(&attr))
+	{
+		return ER_INT;
+	}
+	if ((token = getNextToken(&attr)) == ER_LEX)
+	{
+		result = ER_LEX;
+	}
+	else if(token  == ER_INT)
+	{
+		return ER_INT;
+	}
+	else
+	{
+		result = program();
+	}
+	strFree(&attr);
+	return result;
+}
 
