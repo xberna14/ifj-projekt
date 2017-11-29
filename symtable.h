@@ -10,7 +10,7 @@
 typedef enum {
     t_function;
     t_ID;
-} type_t;
+} elem_type;
 
 typedef struct symtab_t symtab_t;
 
