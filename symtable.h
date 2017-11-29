@@ -44,9 +44,10 @@ typedef struct symtab_elem_t {
     struct symtab_elem_t *last_param;
     struct symtab_elem_t *next_param;
     struct symtab_elem_t *prev_param;
+    struct symtab_elem_t *lptr;
+    struct symtab_elem_t *rptr;
     tListItem *first_instr;
     symtab_t *local_table;
-    struct symtab_elem_t *nextElem;
 } symtab_elem_t;
 
 struct symtab_t{
