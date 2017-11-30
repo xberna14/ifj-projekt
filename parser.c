@@ -152,7 +152,7 @@ prvkyPT getPrvek(int i, int j)
 	return PTAB [indexing(j)][indexing(i)];
 }
 
-char cnst;
+char constant;
 
 // TODO
 prvkyPT changeToken (Token_t token) { // upravim si token z lexeru
@@ -1294,6 +1294,7 @@ int declrList()
 		}
 	else if (strCmpConstStr(&attr, "scope") == 0)
 		{
+			/*
 			if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token urci co bude dal
 			{
 				return ER_LEX;
@@ -1301,7 +1302,7 @@ int declrList()
 				else if (token == ER_INT) 
 			{
 				return ER_INT;
-			}
+			} */
 
 			return SYNTAX_OK;
 		}
@@ -1513,6 +1514,7 @@ int statements()
 */
 int statement()
 {
+	int result = 0;
 	if (token == ID) // prirazeni do prom
 	{
 
@@ -1701,24 +1703,409 @@ int statement()
 
 		else if ((strCmpConstStr(&attr, "input") == 0))
 		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // input id
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT)
+			{
+				return ER_INT;
+			}
+			if (token != ID)
+			{
+				return ER_SYN;
+			}
 
+			if (token != ID)
+			{
+				return ER_SYN;
+			}
+
+			tData *data;
+			tData *data1;
+      		if ((data = BSTSearch(TbSmBST, &attr)) == NULL) // podivame se zda promenna existuje
+      		{
+      			return ER_SEM_P;
+      		}
+// TODO vygenerovat instrukci
+
+      		if ((token = getNextToken(&attr)) == ER_LEX) // dalsi token musi byt EOL
+			{
+				return ER_LEX;
+			}
+			else if (token == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (token == EOL)
+			{
+				return SYNTAX_OK;
+			}
+			else
+			{
+				return ER_SYN;
+			}
 		}
 
 		else if ((strCmpConstStr(&attr, "print") == 0))
 		{
+			int result = 0;
+			if ((token = getNextToken(&attr)) == ER_LEX) // nactu token pro PA
+			{
+				return = ER_LEX;
+			}
+			else if(token  == ER_INT)
+			{
+			return ER_INT;
+			}
 
+			if (token == EOL) // pokud EOL, tak je print zavolan bez expr => SYNTAX ERROR
+			{
+				return ER_SYN;
+			}
+
+			result = exprlist(); // v pripade spravnych vyrazu zpracuje i EOL
+			if (result != SYNTAX_OK)
+			{
+				return result;
+			}
+
+			return SYNTAX_OK;
 		}
 
 		else if ((strCmpConstStr(&attr, "if") == 0))
 		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr
+			{
+				return = ER_LEX;
+			}
+			else if(token  == ER_INT)
+			{
+			return ER_INT;
+			}
 
+			string newVar; // vygenerujeme prom pro vysledek expr
+			if (strInit(&newVar))
+        	{
+        		return ER_INT;
+        	}
+      		if (generateVariable(&newVar))
+        	{
+        		return ER_INT;
+        	}
+
+        	if (BSTInsert (TbSmBST, &newVar, TYPE_INT) != 0) // ulozime do tabulky
+			{
+				return ER_INT;
+			}
+
+			tData *newVariableInfo;
+			strFree(&newVar); // uvolnime nazev promenne
+
+			result = readExpr(&newVariableInfo); // volame PA (po konci PA bude token posunut na then)
+      		if (result != SYNTAX_OK)
+      		{
+      			return result;
+      		}
+
+			void *addrOfIfNotGoto; 
+
+			// pokud je expr false, skaceme na konec
+			// nagenerujeme instrukci podmineneho skoku a ulozime jeji adresu,
+      		// protoze pozdeji bude potreba doplnit adresu skoku, kam skakat
+
+			if (generateInstruction(I_IFNOTGOTO, (void*) newVariableInfo, NULL, NULL))
+			{	
+				return ER_INT;
+			}
+			addrOfIfNotGoto = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
+
+			if (strCmpConstStr(&attr, "then") != 0) // dalsi token musi byt then
+			{
+				return SYNTAX_ERROR;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then EOL
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{		
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then EOL statements
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if ( (result = statements()) != SYNTAX_OK )
+			{
+				return result;
+			}
+
+			void *addrGoto;
+			// nagenerujeme instrukci skoku, ktera preskoci else statement
+			if (generateInstruction(I_GOTO, NULL, NULL, NULL))
+			{
+				return ER_INT;
+			}
+			addrGoto = listGetPointerLast(list);
+			// nagenerujeme instrukci noveho navesti
+			if (generateInstruction(I_LAB, NULL, NULL, NULL))
+			{
+				return ER_INT;
+			}
+			void *addrOfLab1;
+			addrOfLab1 = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
+			// do drive generovane instrukce podmineneho skoku
+			// nastavime aktualni instrukci podle adresy instrukce ifnotgoto
+			listGoto(list, addrOfIfNotGoto); // nastavi aktivni instrukci podle zadaneho ukazatele
+			tInstr *data;
+			data = listGetData(list); // vrati aktiv. instrukci
+			data->addr3 = addrOfLab1;  // a jako 3. adresu dame adresu navesti
+			//kam se bude skakat, pokud podminka nebude platit
+
+
+			if (strCmpConstStr(&attr, "else") != 0) // dalsi token je else
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then EOL else EOL
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{		
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then statements EOL else EOL statements
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if ( (result = statements()) != SYNTAX_OK )
+			{
+				return result;
+			}
+
+			// nagenerujeme instrukci dalsiho navesti
+			if (generateInstruction(I_LAB, NULL, NULL, NULL))
+			{
+				return ER_INT;
+			}
+
+			// navesti konce if, ulozime adresu navesti do addrOfLab1
+			void *addrOfLab2;
+			addrOfLab2 = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
+			listGoto(list, addrGoto); // nastavime aktiv. intrukci podle zadaneho ukazatele
+			tInstr *dataInstr;
+			dataInstr = listGetData(list);
+			dataInstr->addr3 = addrOfLab2;  // a jako 3. adresu dame adresu navesti kam se bude skakat, po provedeni then
+
+			if (strCmpConstStr(&attr, "end") != 0) // dalsi token je end
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then EOL else EOL statements end if
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "if") != 0) // musi byt if
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - if expr then EOL else EOL statements end if EOL
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{		
+				return ER_SYN;
+			}
+
+			return SYNTAX_OK;
 		}
 
 		else if ((strCmpConstStr(&attr, "do") == 0))
 		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // do while
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (strCmpConstStr(&attr, "while") != 0) 
+			{
+				return ER_SYN;
+			}
+
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // do while expr
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+
+			if (generateInstruction(I_LAB, NULL, NULL, NULL))
+			{
+				return ER_INT;
+			}
+			// navesti za while, ulozime adresu navesti do addrOfLab1
+			void *addrOfLab1;
+			addrOfLab1 = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
+ 
+			// nagenerujeme inikatni nazev promenne pro vysledek vyrazu a vlozime
+			// do tabulky symbolu
+			string newVar;
+			if (strInit(&newVar))
+			{
+				return ER_INT;
+			}
+			if (generateVariable(&newVar))
+			{
+				return ER_INT;
+			}
+			// vlozime promennou, pravdepodobne typu int, moznnost pripadne pretypovat
+			if (BSTInsert (TbSmBST, &newVar, TYPE_INT))
+			{
+				return ER_INT;
+			}
+
+			// ulozime si adresu s daty promenne
+			tData *newVariableInfo;
+			newVariableInfo = BSTSearch(TbSmBST, &newVar);
+			// uvolnime nazev promenne
+			strFree(&newVar);
+
+
+
+			result = readExpr(&newVariableInfo); // volame PA (po konci PA bude token posunut na EOL)
+      		if (result != SYNTAX_OK)
+      		{
+      			return result;
+      		}
+
+      		// pokud je podminka FALSE skacu na konec, jinak pokracuju
+      		// nagenerujeme instrukci podmineneho skoku a ulozime jeji adresu,
+      		// protoze pozdeji bude potreba doplnit adresu skoku, kam skakat
+      		void *addrOfIfGoto;
+      		if(generateInstruction(I_IFNOTGOTO, (void*) newVariableInfo, NULL, NULL))
+        	{
+        		return ER_INT;
+        	}
+
+      		addrOfIfGoto = listGetPointerLast(list);
+ 
+      		if (token != EOL)
+      		{
+      			return ER_SYN;
+      		}
+
+      		if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - do while expr EOL statements
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if ( (result = statements()) != SYNTAX_OK ) // zpracujeme statements
+			{
+				return result;
+			}
+
+			// nagenerujeme instrukci skoku, ktera skoci na misto za while
+      		// takze budeme cyklit
+      		if(generateInstruction(I_GOTO, NULL, NULL, (void*) addrOfLab1))
+      		{
+        		return ER_INT;
+      		}
+ 
+      		// nagenerujeme instrukci druheho navesti
+      		if(generateInstruction(I_LAB, NULL, NULL, NULL))
+        	{
+        		return ER_INT;
+        	}
+      		void *addrOfLab2;
+      		addrOfLab2 = listGetPointerLast(list);// ulozime si ukazatel na posledni instr.
+ 
+      		// jiz zname adresu druheho navesti, muzeme tedy nastavit adresu
+      		// do drive generovane instrukce podmineneho skoku
+      		// nastavime aktualni instrukci podle adresy instrukce ifnotgoto
+    		listGoto(list, addrOfIfGoto);
+   			tInstr *data;
+      		data = listGetData(list);
+      		data->addr3 = addrOfLab2;  // a jako 3. adresu dame adresu 2. navesti
+      		//kam se bude skakat, pokud podminka nebude platit
+
+      		if (strCmpConstStr(&attr, "loop") != 0) // token se nacetl pri zpracovani statements  - do while expr EOL statements loop
+			{
+				return ER_SYN;
+			}
+
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - do while expr EOL statements loop EOL
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if (token != EOL)
+			{		
+				return ER_SYN;
+			}
+
+			return SYNTAX_OK;
+		}
+		
+		else if ((strCmpConstStr(&attr, "return") == 0))
+		{
 
 		}
-	
 		
 	
 		else
@@ -1764,9 +2151,108 @@ int assignment(tData **var1,tData **var2)
 }
 
 
-// 11.	<body> -> Scope <statements> end scope EOL
+//25.	<exlist> -> expr ; <exlist_n>
+//26.	<exlist_n> -> expr ; <exlist_n>
+//27.	<exlist_n> -> ε
+int exprlist()
+{
+	if (token != EOL) // jeste neni konec
+	{	
+		tData *data;
+		int ret;
+		if ((ret = getExpr(data)) != 0) // zavolam PA
+		{
+			return ret;
+		}
+
+		if ((token = getNextToken(&attr)) == ER_LEX) // musi nasledovat ;
+		{
+			return ER_LEX;
+		}
+			else if (token == ER_INT)
+		{
+			return ER_INT;
+		}
+
+		if (token != SEMICOLON)
+		{
+			return ER_SYN;
+		}
+
+// TODO gen instrukci vypsani dat		
+
+		if ((token = getNextToken(&attr)) == ER_LEX) // bud EOF nebo dalsi expr
+		{
+			return ER_LEX;
+		}
+			else if (token == ER_INT)
+		{
+			return ER_INT;
+		}
+
+		return exprlist();
+	}
+	else // token je EOL, koncime
+	{
+		return SYNTAX_OK;
+		
+	}
+}
+
+
+// 11.	<body> -> Scope <statements> end scope EOL 
 int mainList()
 {
+	if (token == KEYWORD)
+	{
+		if ((strCmpConstStr(&attr, "scope") == 0))
+		{
+			if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - scope statements
+			{
+				return = ER_LEX;
+			}
+			else if (token  == ER_INT)
+			{
+				return ER_INT;
+			}
+
+			if ( (result = statements()) != SYNTAX_OK ) // zpracujeme statements
+			{
+				return result;
+			}
+
+			if ((strCmpConstStr(&attr, "end") == 0)) // statements posune token, ten musi byt end
+			{
+				if ((token = getNextToken(&attr)) == ER_LEX) // nacteme dalsi token  - scope statements end scope
+				{
+					return = ER_LEX;
+				}
+				else if (token  == ER_INT)
+				{
+					return ER_INT;
+				}
+				if ((strCmpConstStr(&attr, "scope") == 0))
+				{
+					// TODO 
+					return SYNTAX_OK;
+
+				}
+				else
+				{
+					return ER_SYN;
+				}
+
+
+			}
+			else
+			{
+				return ER_SYN;
+			}
+
+
+
+		}
+	}
 
 }
 
