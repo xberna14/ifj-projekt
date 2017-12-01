@@ -1571,7 +1571,7 @@ int statement()
 			{
 				return ER_SYN;
 			}
-			
+// TODO overit existenci			
 			string id;
 			if (strInit(&id))
 			{
@@ -2198,6 +2198,24 @@ int exprlist()
 		
 	}
 }
+
+
+//28.	<in_param> -> ε
+//29.	<in_param> -> id <in_param_n>
+//30.	<in_param_n> -> , id <in_param_n>
+//31.	<in_param_n> -> ε
+int inParam()
+{
+		tData *data;
+      	if ((data = BSTSearch(TbSmBST, &attr)) == NULL) // podivame se zda promenna existuje
+      	{
+      		return ER_SEM_P;
+      	}
+      	// todo
+
+
+}
+
 
 
 // 11.	<body> -> Scope <statements> end scope EOL 
