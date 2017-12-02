@@ -1,13 +1,4 @@
-/*
-** 		_
-**     |
-** |___|___
-**     |   |
-**	  _|
-**
-*/
 
-//TODO
 // VARIANTA BINARNI VYHLEDAVACI STROM
 #include "symtable.h"
 #include "lexer.h"
@@ -53,5 +44,14 @@ void symTableInsert(symtab_elem_t* Root, char k, string nazov, elem_type typ){
 			tmp->type = typ;
 			*Root = tmp;
 		}
+	}
+}
+
+void symDeleteTree(symtab_elem_t *Root){
+    if(*Root != NULL){
+		symDeleteTree(&(*Root)->rptr);
+		symDeleteTree(&(*Root)->lptr);
+		free(*Root);
+		*Root = NULL;
 	}
 }
