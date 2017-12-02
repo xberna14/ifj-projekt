@@ -14,3 +14,15 @@
 #define ER_INT 99
 #define MAXSTACK 30
 #define SYNTAX_OK 0
+
+
+int parse(tBSTNodePtr *tb, tListOfInstr *instrList);
+int program();
+int mainList();
+int inParam();
+int exprlist();
+int assignment(tData **var1,tData **var2);
+int statement();
+int statements();
+int funcParam();
+int declrList();

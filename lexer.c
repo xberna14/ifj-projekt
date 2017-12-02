@@ -1,10 +1,17 @@
 /*
-** 		_
-**     |
-** |___|___
-**     |   | 
-**	  _|
-**
+**navratove hodnoty ktore treba dat do tabulky : 
+*	 PLUS
+     MINUS
+     LESS_EQ
+     LESS
+     GREAT_EQ
+     GREAT
+     N_EQUAL
+     ASSIGN
+     EQUAL
+     DIV
+     MULTIPLY_EQ
+     MULTIPLY
 */
 
 
@@ -23,18 +30,18 @@ int Token;
 typedef struct Token_t 
 {
     int Token;
-    char *buffer;
+    char *attr;
     struct Token_t *next;
 }
 
 Token_t;
-Token_t *tokenBuffer;
+Token_t *tokenattr;
 
 void setSourceFile(FILE *f)
 {
   source = f;
 }
-void returnToken(int Token, char *buffer)
+void returnToken(int Token, char *attr)
  {
     Token_t *temp = malloc(sizeof(Token_t));
 
@@ -42,30 +49,30 @@ void returnToken(int Token, char *buffer)
         return;
 
     temp->Token = Token;
-    temp->buffer = buffer;
-    temp->next = tokenBuffer;
+    temp->attr = attr;
+    temp->next = tokenattr;
 }
-    Tint getNextToken(char **buffer) {
+    int getNextToken(string  *attr) {
     int result;
 
-    if (tokenBuffer == NULL) {
+    if (tokenattr == NULL) {
         string str;
         strInit(&str);
         result = lexer(&str);
-        *buffer = str.str;
+        *attr = str.str;
         return result;
     }
 
-    result = tokenBuffer->token;
-    *buffer = tokenBuffer->buffer;
+    result = tokenattr->token;
+    *attr = tokenattr->attr;
 
-    token_t *temp = tokenBuffer;
-    tokenBuffer = tokenBuffer->next;
+    token_t *temp = tokenattr;
+    tokenattr = tokenattr->next;
     free(temp);
 
     return result;
-}tokenBuffer = temp;
-int lexer(string *buffer) {
+tokenattr = temp;
+int lexer(string *attr) {
     int state = 0; // stav automatu
     int c; // promenna pro znak
     char a [4]; // promenna pomocna pro zadani retezce pomoci hex cisla
@@ -87,8 +94,10 @@ int lexer(string *buffer) {
     int great_count = 0; // kontrola jestli je na vstupu >
     int excl_count = 0;  // kontrola jestli je na vstupu !
     int eq_count   = 0; // kontrola jestli je na vstupu =
+    int quote_count = 0;// kontrola ci je na vstupe /
+    int mul_count = 0; //kontrola ci je na vstupe *
 
-    strClear(buffer); // vymazat soucasny obsah stringu
+    strClear(attr); // vymazat soucasny obsah stringu
 
     while(1){ // cyklus nacitani znaku
 
@@ -99,14 +108,15 @@ int lexer(string *buffer) {
     case 0: // POCATECNI STAV
 
       if (isspace(c)) state = 0; // ignoruj bila mista
-
+      else if (c == '\'') {state = 3;}
       else if (c == '/') { quote_count = 1; state = 8; }// bude bud komentar a nebo se jedna o operator deleni, nejdriv zkontrolovat jestli je to deleni ve stavu 8
-
-      else if (isalpha(c) || c == '_' || c == '$'){ // jedna se o indentifikator nebo klicove slovo
+      else if (c == '-') { minus_count = 1; state = 3; }//bud je to minus alebo udentifikator
+      
+      else if (isalpha(c) || c == '_' || c == '$' || c== '&' || c=='%'){ // jedna se o indentifikator nebo klicove slovo
 
        // printf("jetoznak jdu do 3\n"); // TEST
 
-	    strAddChar(buffer, c); // nahraj znak do struktury
+	    strAddChar(attr, c); // nahraj znak do struktury
 	    state = 3; // preskoc do casu kde se budou resit identifikatory atd.
 	 }
 
@@ -117,7 +127,7 @@ int lexer(string *buffer) {
 
 	 else if (isdigit(c)){ // jedna se o int nebo double
 
-        strAddChar(buffer, c);
+        strAddChar(attr, c);
         state = 5;
 	 }                    // OSTATNI ZNAKY
 
@@ -128,7 +138,7 @@ int lexer(string *buffer) {
 	 else if (c == ';') {  return SEMICOLON; }
 	 else if (c == ',') {  return COMMA; }
 
-     else if (c == '*' && quote_count == 0) { return MUL; }
+     else if (c == '*') { mul_count = 1; state = 8; }
 	 else if (c == '+') { plus_count = 1; state = 8;}
 	 else if (c == '-') { minus_count = 1; state = 8;}
 	 else if (c == '<') { less_count = 1; state = 8;}
@@ -140,7 +150,7 @@ int lexer(string *buffer) {
 
     case 1: // RADKOVY KOMENTAR
 
-        if (c != '\n') state = 1;  // jednoradkovy komentar, zustan tu a ignoruj ho
+        if (c != '\'') state = 1;  // jednoradkovy komentar, zustan tu a ignoruj ho
 
         if (c == '\n') state = 0; // konec radku a teda i komentare ???
 
@@ -148,11 +158,9 @@ int lexer(string *buffer) {
 
     case 2: // BLOKOVY KOMENTAR
 
-        if (c != '*' && c!= '/') { state = 2;} // uvnitr blokoveho komentare, ignoruj
+        if (c == '/' && quote_count = 1 ) { state = 1;} // netusim ako zapisat' ascii je 39
 
-        else if (c == '*') { star_count = 1; state = 2;} // eviduj hvezdicku a zustan tady
-
-        else if (c == '/' && star_count == 1) { star_count = 0; state = 0;} // konec blokoveho komentare, vrat se na zacatek do nuly
+        else if (c == '/' && quote_count = 3 ) { quote_count = 0; state = 0;} // konec blokoveho komentare, vrat se na zacatek do nuly
 
         else if (c == EOF) {return ER_LEX;} // Testuj neukonceny komentar???!!
 
@@ -160,29 +168,9 @@ int lexer(string *buffer) {
 
     case 3: // IDENTIFIKATORY, KLICOVA SLOVA
 
-        if (isalnum(c) || c == '_' || c == '$' || c == '.'){ // pridana tecka jako znak pouzivany pro plne kvalifikovany identifikator
-
-        if (c == '.' && dot_count == 0) { dot_count++; // evidujeme nalezenou tecku
-					 
-	if (strCmpConstStr(buffer, "boolean") == 0 || strCmpConstStr(buffer, "break") == 0 || strCmpConstStr(buffer, "class") == 0 || strCmpConstStr(buffer, "continue") == 0
-              || strCmpConstStr(buffer, "do") == 0 || strCmpConstStr(buffer, "double") == 0 || strCmpConstStr(buffer, "else") == 0 || strCmpConstStr(buffer, "false") == 0
-              || strCmpConstStr(buffer, "for") == 0 || strCmpConstStr(buffer, "if") == 0 || strCmpConstStr(buffer, "int") == 0 || strCmpConstStr(buffer, "return") == 0
-              || strCmpConstStr(buffer, "String") == 0 || strCmpConstStr(buffer, "static") == 0 || strCmpConstStr(buffer, "true") == 0 || strCmpConstStr(buffer, "void") == 0
-              || strCmpConstStr(buffer, "while") == 0 || strCmpConstStr(buffer, "Main") == 0 || strCmpConstStr(buffer, "run") == 0 )
-
-        {return ER_LEX; break;} // otestuj jestli prvni cast plne kvalifikovaneho identifikatoru neni klicove slovo
-
-        }				 
-
-        else if (c == '.' && dot_count > 0 ) {return ER_LEX; break;} // pokud se objevi dalsi tecka jedna se o neplatny identifikator,
-        
-	else if (c != '.' && dot_count > 0) {
-
-            id_count = id_count + 1;
-
-        }
-        
-	strAddChar(buffer, c); // dokud se jedna o identifikator nebo klicove slovo, naplnuj strukturu
+       if (c == '-' && !isspace(c)){ minus_count = 1; state = 8;} // ak nieje medzera je to identifikator 
+       if (c == '*' && !isspace(c)){ mul_count = 1; state = 8; }//to iste ale pre hviezdu     
+	strAddChar(attr, c); // dokud se jedna o identifikator nebo klicove slovo, naplnuj strukturu
 
         state = 3; // zustan tady a res identifikatory a klicova slova
 
@@ -190,54 +178,52 @@ int lexer(string *buffer) {
 
 	    else {// struktura naplnena, nasleduje prazdne misto nebo nepovoleny znak nebo zacatek zavorky
 
-        if (!isspace(c) && !isalnum(c) && c != '_' && c != '$' && c != '.' && c != '(' && c!= ')' && c!= '{' && c!= '}' && c!= '=' && c!= '+' && c!= '-' && c!= '*' && c!= '/' && c!= '<' && c!= '>' && c!='!' && c!= ';' && c != ',') { return ER_LEX; break; } // pokud se neobjevi prazdne misto nebo zavorky nebo operatory ale nejaky nepovoleny znak je to error
+        if (!isspace(c) && !isalnum(c) && c != '_' && c != '$' && c != '(' && c!= ')' && c!= '{' && c!= '}' && c!= '=' && c!= '+' && c!= '-' && c!= '*' && c!= '/' && c!= '<' && c!= '>' && c!='!' && c!= ';' && c != ',') { return ER_LEX; break; } // pokud se neobjevi prazdne misto nebo zavorky nebo operatory ale nejaky nepovoleny znak je to error
 
         ungetc(c, source); // POZOR! Je potreba vratit posledni nacteny znak
-		    
-	 if (dot_count > 0) { // jednalo se o plne kvalifikovany identifikator, potreba zkontrolovat, jestli v jeho druhe casti neni klicove slovo
 
-                int delka = buffer->length +1;
-                int delka2 = delka - (id_count +1);
-                char kontrola [id_count +1];
+        //IDENTIFIKATORY 
+	    if (strCmpConstStr(attr, "As") == 0) { return AS;}
+   else if (strCmpConstStr(attr, "Asc") == 0) { return ASC; }
+   else if (strCmpConstStr(attr, "Declare") == 0) { return DECLARE;}
+   else if (strCmpConstStr(attr, "Dim") == 0) { return DIM;}
+   else if (strCmpConstStr(attr, "Do") == 0) { return DO; }
+   else if (strCmpConstStr(attr, "Double") == 0) { return DOUBLE;}
+   else if (strCmpConstStr(attr, "Else") == 0) { return ELSE;}
+   else if (strCmpConstStr(attr, "End") == 0) {return END;}
+   else if (strCmpConstStr(attr, "Chr") == 0) {return CHR;}
+   else if (strCmpConstStr(attr, "Function") == 0) {return FUNCTION;}
+   else if (strCmpConstStr(attr, "If") == 0) {return IF;}
+   else if (strCmpConstStr(attr, "Input") == 0) {return INPUT;}
+   else if (strCmpConstStr(attr, "Integer") == 0) {return INTEGER;}
+   else if (strCmpConstStr(attr, "Length") == 0) {return LENGTH;}
+   else if (strCmpConstStr(attr, "Loop") == 0) {return LOOP;}
+   else if (strCmpConstStr(attr, "Print") == 0) {return PRINT;}
+   else if (strCmpConstStr(attr, "Return") == 0) {return RETURN;}
+   else if (strCmpConstStr(attr, "Scope") == 0) { return SCOPE;}
+   else if (strCmpConstStr(attr, "String") == 0) {return STRING; }
+   else if (strCmpConstStr(attr, "SubStr") == 0) {return SUBSTR;}
+   else if (strCmpConstStr(attr, "Then") == 0) {return THEN;}
+   else if (strCmpConstStr(attr, "While") == 0) {return WHILE;}
+   //klicova slova
+   else if (strCmpConstStr(attr, "And") == 0) {return AND;}
+   else if (strCmpConstStr(attr, "Boolean") == 0) {return BOOLEAN;}
+   else if (strCmpConstStr(attr, "Continue") == 0) {return CONTINUE;}
+   else if (strCmpConstStr(attr, "Elseif") == 0) {return ELSEIF ;}
+   else if (strCmpConstStr(attr, "Exit") == 0) {return EXIT;}
+   else if (strCmpConstStr(attr, "False") == 0) {return FALSE;}
+   else if (strCmpConstStr(attr, "For") == 0) {return FOR;}
+   else if (strCmpConstStr(attr, "Next") == 0) { return NEXT;}
+   else if (strCmpConstStr(attr, "Not") == 0) {return NOT; }
+   else if (strCmpConstStr(attr, "And") == 0) {return AND;}
+   else if (strCmpConstStr(attr, "Or") == 0) {return OR;}
+   else if (strCmpConstStr(attr, "Shared") == 0) {return SHARED;}
+   else if (strCmpConstStr(attr, "Static") == 0) {return STATIC;}
+   else if (strCmpConstStr(attr, "True") == 0) {return TRUE;}
 
-                for (int i = 0; i < id_count +1; i++){
 
-                    kontrola[i] = buffer->str[delka2];
-                    delka2 = delka2 + 1;
 
-                }
 
-                kontrola[id_count +1] = '\0';
-
-                if (strcmp(kontrola, "boolean") == 0 || strcmp(kontrola, "break") == 0 || strcmp(kontrola, "class") == 0 || strcmp(kontrola, "continue") == 0
-                    || strcmp(kontrola, "do") == 0 || strcmp(kontrola, "double") == 0 || strcmp(kontrola, "else") == 0 || strcmp(kontrola, "false") == 0
-                    || strcmp(kontrola, "for") == 0 || strcmp(kontrola, "if") == 0 || strcmp(kontrola, "int") == 0 || strcmp(kontrola, "return") == 0
-                    || strcmp(kontrola, "String") == 0 || strcmp(kontrola, "static") == 0 || strcmp(kontrola, "true") == 0 || strcmp(kontrola, "void") == 0
-                    || strcmp(kontrola, "while") == 0 || strcmp(kontrola, "Main") == 0 || strcmp(kontrola, "run") == 0 ) return ER_LEX;
-
-        }	    
-
-        // kontrola, zda se nejedna o klicove slovo nebo treba povinnou vestavenou fci
-
-	    if (strCmpConstStr(buffer, "boolean") == 0) { return BOOLEAN;}
-   else if (strCmpConstStr(buffer, "break") == 0) { return BREAK; }
-   else if (strCmpConstStr(buffer, "class") == 0) { return CLASS;}
-   else if (strCmpConstStr(buffer, "continue") == 0) { return CONTINUE;}
-   else if (strCmpConstStr(buffer, "do") == 0) { return DO; }
-   else if (strCmpConstStr(buffer, "double") == 0) { return DOUBLE;}
-   else if (strCmpConstStr(buffer, "else") == 0) { return ELSE;}
-   else if (strCmpConstStr(buffer, "false") == 0) {return FALSE;}
-   else if (strCmpConstStr(buffer, "for") == 0) {return FOR;}
-   else if (strCmpConstStr(buffer, "if") == 0) {return IF;}
-   else if (strCmpConstStr(buffer, "int") == 0) {return INT;}
-   else if (strCmpConstStr(buffer, "return") == 0) {return RETURN;}
-   else if (strCmpConstStr(buffer, "String") == 0) {return STRING;}
-   else if (strCmpConstStr(buffer, "static") == 0) {return STATIC;}
-   else if (strCmpConstStr(buffer, "true") == 0) {return TRUE;}
-   else if (strCmpConstStr(buffer, "void") == 0) {return VOID;}
-   else if (strCmpConstStr(buffer, "while") == 0) {return WHILE;}
-   else if (strCmpConstStr(buffer, "Main") == 0) { return MAIN;}
-   else if (strCmpConstStr(buffer, "run") == 0) {return RUN; }
 
 	    else {return ID;}
         } break;
@@ -246,7 +232,7 @@ int lexer(string *buffer) {
 
          if (c != '"' && c!= '\x5C' && quote_count == 0 && c != '\n'){ // dokud sme v retezci a nejsou pouzity specialni znaky jako \n \" a nema nasledovat neco za spec znakem
 
-         strAddChar(buffer, c); // tak normalne naplnuj strukturu
+         strAddChar(attr, c); // tak normalne naplnuj strukturu
 
          //quote_count = 0; // radsi furt nuluj quote_count jelikoz se nejedna o specialni znak
 
@@ -265,7 +251,7 @@ int lexer(string *buffer) {
 
         c = '\x0A';
 
-        strAddChar(buffer, c);
+        strAddChar(attr, c);
 
         quote_count = 0;
 
@@ -274,7 +260,7 @@ int lexer(string *buffer) {
 
         else if (c == '"' && quote_count == 1){ // jedna se o uvozovky uvnitr stringu NE signalizujici jeho konec
 
-         strAddChar(buffer, c); // hod je do struktury
+         strAddChar(attr, c); // hod je do struktury
 
          quote_count = 0;
 
@@ -286,7 +272,7 @@ int lexer(string *buffer) {
 
         c = '\x09';
 
-        strAddChar(buffer, c);
+        strAddChar(attr, c);
 
         quote_count = 0;
 
@@ -296,7 +282,7 @@ int lexer(string *buffer) {
 
         else if ( c == '\x5C' && quote_count == 1){ // jedna se o  \ uvnitr stringu
 
-        strAddChar(buffer, c);
+        strAddChar(attr, c);
 
         quote_count = 0;
 
@@ -336,7 +322,7 @@ int lexer(string *buffer) {
 
         if (isdigit(c)){ // pokud prichazi cislo
 
-         strAddChar(buffer, c); // pln strukturu
+         strAddChar(attr, c); // pln strukturu
 
          state = 5; // a zustan tady
         }
@@ -350,7 +336,7 @@ int lexer(string *buffer) {
 
           ungetc(c, source); // konec celeho cisla, vracime ; nebo volny zpatky, zpracujem pak
 		
-	  long int int_control = atoi(buffer->str);
+	  long int int_control = atoi(attr->str);
 
           if (int_control > INT_MAX) {return ER_LEX; break;} 
 
@@ -363,14 +349,14 @@ int lexer(string *buffer) {
         else if(c == '.') { // bude se jednat o desetinny literal ve kterem se nachazi desetinna cast
 
          dbl_dot_count = 1;
-         strAddChar(buffer, c);
+         strAddChar(attr, c);
          state = 6;
 
         }
 
         else if(c == 'e' || c == 'E') { // bude se jednat o desetinny literal ve kterem NENI desetinna cast ale pouze exponent
 
-         strAddChar(buffer, c);
+         strAddChar(attr, c);
 
          E_count = 1;
 
@@ -385,14 +371,14 @@ int lexer(string *buffer) {
 
          dbl_dot_count = 0;
 
-         strAddChar(buffer, c); // pln strukturu
+         strAddChar(attr, c); // pln strukturu
 
          state = 6; // a zustan tady
         }
 
         else if (isdigit(c) && dbl_dot_count == 0){
 
-         strAddChar(buffer, c); // pln strukturu
+         strAddChar(attr, c); // pln strukturu
 
          state = 6; // a zustan tady
         }
@@ -404,7 +390,7 @@ int lexer(string *buffer) {
 
         else if (c == 'e' || c == 'E'){ // nasleduje exponent
 
-         strAddChar(buffer, c);
+         strAddChar(attr, c);
 
          E_count = 1;
 
@@ -434,7 +420,7 @@ int lexer(string *buffer) {
 
          sign_count = 1; // bylo pouzito nepovinne znamenko
 
-         strAddChar(buffer, c); // uloz ho do struktury
+         strAddChar(attr, c); // uloz ho do struktury
 
          state = 7; // a zustan tady
         }
@@ -448,7 +434,7 @@ int lexer(string *buffer) {
 
          sign_count = 0; // bylo pouzito nepovinne znamenko
 
-         strAddChar(buffer, c); // uloz ho do struktury
+         strAddChar(attr, c); // uloz ho do struktury
 
          state = 7; // a zustan tady
         }
@@ -461,7 +447,7 @@ int lexer(string *buffer) {
 
         else if (isdigit(c) && E_count == 1 ) { // nebylo vyuzito nepovinne znamenko
 
-         strAddChar(buffer, c); // uloz ho do struktury
+         strAddChar(attr, c); // uloz ho do struktury
 
          E_count = 0;
 
@@ -470,7 +456,7 @@ int lexer(string *buffer) {
 
         else if (isdigit(c) && E_count == 0 ) { // neprazdna posloupnost cislic
 
-         strAddChar(buffer, c); // uloz ho do struktury
+         strAddChar(attr, c); // uloz ho do struktury
 
          state = 7; // a zustan tady
         }
@@ -499,9 +485,10 @@ int lexer(string *buffer) {
      else if (excl_count == 1 && c == '=')  {return N_EQUAL;}
      else if (eq_count == 1 && c != '=')    {ungetc(c, source); return ASSIGN; } // vrat neplatny znak, je to rovnitko
      else if (eq_count == 1 && c == '=')    {return EQUAL;} // vrat operator ==
-     else if (quote_count == 1 && c != '/' && c != '*') {ungetc(c, source); return DIV; } // nejedna se o komentar ale o operator deleni
-     else if (quote_count == 1 && c == '/') state = 1; // jedna se o jednoradkovy komentar
-     else if (quote_count == 1 && c == '*') {state = 2;} // jedna se o blokovy komentar
+     else if (quote_count == 1 && c != '/') {ungetc(c, source); return DIV; } // nejedna se o komentar ale o operator deleni
+     else if (mul_count ==1 && c == '=')	{ return MULTIPLY_EQ} //vrat nasobenie ako vysledok
+     else if (mul_count ==1 && c != '=')	{ungetc(c, source);return MULTIPLY;}	//vrat nasobenie do pola 
+     else if (quote_count == 1 && c == '/') {state = 2;} // jedna se o blokovy komentar
      else return ER_LEX;
      break;
 
@@ -534,7 +521,7 @@ int lexer(string *buffer) {
 
       if ( helpmepls > 0377 || helpmepls < 01 ){ return ER_LEX; } else {
 
-      strAddChar(buffer, helpmepls);
+      strAddChar(attr, helpmepls);
 
       num_count = 0;
 

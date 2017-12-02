@@ -24,6 +24,7 @@
 #include "parser.h"
 #include "string.h"
 #include "listinstr.h"
+#include "symtable.h"
 
 
 
