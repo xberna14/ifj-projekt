@@ -20,7 +20,7 @@ Autori: Dominik Peza (xpezad00)
 #include <string.h>
 #include <limits.h>
 
-#include "lexer.h"
+#include "scaner.h"
 #include "parser.h"
 #include "string.h"
 #include "listinstr.h"

@@ -23,3 +23,4 @@ typedef struct symtab_elem_t {
 void symTableInit(symtab_elem_t *Root);
 int symTableSearch(symtab_elem_t Root, elem_type typ, string nazov,char k);
 void symTableInsert(symtab_elem_t* Root, char k, string nazov, elem_type typ);
+void symDeleteTree(symtab_elem_t *Root);

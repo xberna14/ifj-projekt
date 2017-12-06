@@ -9,7 +9,7 @@ Autori: Dominik Peza (xpezad00)
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "lexer.h"
+#include "scaner.h"
 #include "listinstr.h"
 #include "parser.h"
 #include "string.h"

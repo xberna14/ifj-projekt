@@ -21,6 +21,8 @@ Autori: Dominik Peza (xpezad00)
      DIV
      MULTIPLY_EQ
      MULTIPLY
+     scaner : Matej Havlas(xhavla06)
+     		  Radoslav Bernath(x)
 */
 
 
@@ -500,48 +502,6 @@ int lexer(string *attr) {
      else if (quote_count == 1 && c == '/') {state = 2;} // jedna se o blokovy komentar
      else return ER_LEX;
      break;
-
-   case 9: // RETEZCE DODATEK
-
-      if (!isdigit(c) && num_count < 3) { return ER_LEX; } // error typu \01abc
-
-      else if ( isdigit(c) && num_count == 1 ) {
-
-	 a[1] = c;
-	 num_count = 2;
-
-	 state = 9;
-      }
-      else if ( isdigit(c) && num_count == 2 ) {
-
-      a[2] = c;
-      num_count = 3; //naplneno mame vsechny cisla
-
-      errno = 0;
-      char *endptr;
-
-      int helpmepls = strtoul(a, &endptr, 8);
-
-      if (errno != 0)
-          return ER_LEX;
-
-      if (*endptr != '\0')
-          return ER_LEX;
-
-      if ( helpmepls > 0377 || helpmepls < 01 ){ return ER_LEX; } else {
-
-      strAddChar(attr, helpmepls);
-
-      num_count = 0;
-
-      state = 4;
-
-      }
-
-      }
-
-    break;
-
   } // konec switche
  } // konec while
 } // konec funkce

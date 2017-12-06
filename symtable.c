@@ -9,7 +9,7 @@ Autori: Dominik Peza (xpezad00)
 
 // VARIANTA BINARNI VYHLEDAVACI STROM
 #include "symtable.h"
-#include "lexer.h"
+#include "scaner.h"
 
 void symTableInit(symtab_elem_t *Root){
     *Root = NULL;
