@@ -1,5 +1,14 @@
+/**
+IFJ PROJEKT 2017
+Prekladac jazyka IFJ17
+Autori: Dominik Peza (xpezad00)
+		Matej Havlas (xhavla06)
+        Radoslav Bernath (xberna14)
+        Marek Hornak (xhorna13)
+ */
+
 /*
-**navratove hodnoty ktore treba dat do tabulky : 
+**navratove hodnoty ktore treba dat do tabulky :
 *	 PLUS
      MINUS
      LESS_EQ
@@ -27,7 +36,7 @@
 FILE *source;
 int Token;
 
-typedef struct Token_t 
+typedef struct Token_t
 {
     int Token;
     char *attr;
@@ -111,7 +120,7 @@ int lexer(string *attr) {
       else if (c == '\'') {state = 3;}
       else if (c == '/') { quote_count = 1; state = 8; }// bude bud komentar a nebo se jedna o operator deleni, nejdriv zkontrolovat jestli je to deleni ve stavu 8
       else if (c == '-') { minus_count = 1; state = 3; }//bud je to minus alebo udentifikator
-      
+
       else if (isalpha(c) || c == '_' || c == '$' || c== '&' || c=='%'){ // jedna se o indentifikator nebo klicove slovo
 
        // printf("jetoznak jdu do 3\n"); // TEST
@@ -168,8 +177,8 @@ int lexer(string *attr) {
 
     case 3: // IDENTIFIKATORY, KLICOVA SLOVA
 
-       if (c == '-' && !isspace(c)){ minus_count = 1; state = 8;} // ak nieje medzera je to identifikator 
-       if (c == '*' && !isspace(c)){ mul_count = 1; state = 8; }//to iste ale pre hviezdu     
+       if (c == '-' && !isspace(c)){ minus_count = 1; state = 8;} // ak nieje medzera je to identifikator
+       if (c == '*' && !isspace(c)){ mul_count = 1; state = 8; }//to iste ale pre hviezdu
 	strAddChar(attr, c); // dokud se jedna o identifikator nebo klicove slovo, naplnuj strukturu
 
         state = 3; // zustan tady a res identifikatory a klicova slova
@@ -182,7 +191,7 @@ int lexer(string *attr) {
 
         ungetc(c, source); // POZOR! Je potreba vratit posledni nacteny znak
 
-        //IDENTIFIKATORY 
+        //IDENTIFIKATORY
 	    if (strCmpConstStr(attr, "As") == 0) { return AS;}
    else if (strCmpConstStr(attr, "Asc") == 0) { return ASC; }
    else if (strCmpConstStr(attr, "Declare") == 0) { return DECLARE;}
@@ -335,10 +344,10 @@ int lexer(string *attr) {
         else if (isspace(c) || c == ')' || c == ',' || c == ';' || c == '+' || c == '-' || c == '/' || c == '*' || c == '!' || c == '=' || c == '<' || c == '>'){
 
           ungetc(c, source); // konec celeho cisla, vracime ; nebo volny zpatky, zpracujem pak
-		
+
 	  long int int_control = atoi(attr->str);
 
-          if (int_control > INT_MAX) {return ER_LEX; break;} 
+          if (int_control > INT_MAX) {return ER_LEX; break;}
 
           return INT_LITERAL; // a vrati se celociselny literal
 
@@ -487,7 +496,7 @@ int lexer(string *attr) {
      else if (eq_count == 1 && c == '=')    {return EQUAL;} // vrat operator ==
      else if (quote_count == 1 && c != '/') {ungetc(c, source); return DIV; } // nejedna se o komentar ale o operator deleni
      else if (mul_count ==1 && c == '=')	{ return MULTIPLY_EQ} //vrat nasobenie ako vysledok
-     else if (mul_count ==1 && c != '=')	{ungetc(c, source);return MULTIPLY;}	//vrat nasobenie do pola 
+     else if (mul_count ==1 && c != '=')	{ungetc(c, source);return MULTIPLY;}	//vrat nasobenie do pola
      else if (quote_count == 1 && c == '/') {state = 2;} // jedna se o blokovy komentar
      else return ER_LEX;
      break;

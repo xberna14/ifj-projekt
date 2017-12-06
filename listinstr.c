@@ -1,11 +1,11 @@
-/*
-** 		_
-**     |
-** |___|___
-**     |   | 
-**	  _|
-**
-*/
+/**
+IFJ PROJEKT 2017
+Prekladac jazyka IFJ17
+Autori: Dominik Peza (xpezad00)
+		Matej Havlas (xhavla06)
+        Radoslav Bernath (xberna14)
+        Marek Hornak (xhorna13)
+ */
 
 #include <stdio.h>
 #include <malloc.h>
@@ -18,7 +18,7 @@ void listInit(tListOfInstr *L)
   L->last   = NULL;
   L->active = NULL;
 }
-  
+
 void listFree(tListOfInstr *L)
 // funkce dealokuje seznam instrukci
 {

@@ -1,11 +1,11 @@
-/*
-** 		_
-**     |
-** |___|___
-**     |   | 
-**	  _|
-**
-*/
+/**
+IFJ PROJEKT 2017
+Prekladac jazyka IFJ17
+Autori: Dominik Peza (xpezad00)
+		Matej Havlas (xhavla06)
+        Radoslav Bernath (xberna14)
+        Marek Hornak (xhorna13)
+ */
 
 
 /* TODO
@@ -93,7 +93,7 @@ typedef enum
 	O_LevaZ,			// ( 11
 	O_PravaZ,			// ) 12
 	O_ID,				// id 13
-  
+
 	O_Lt,				// $ 14
 
 	TAB_Rovno,			// = 15
@@ -112,7 +112,7 @@ int PTAB [15][15] =
 /* + */		{TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
 /* - */		{TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
 /* * */		{TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
-/* / */		{TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},	
+/* / */		{TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
 /* \ */		{TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Mensi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
 /* < */		{TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
 /* > */		{TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi, TAB_Mensi, TAB_Vetsi},
@@ -124,11 +124,11 @@ int PTAB [15][15] =
 /* ) */		{TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Chyba, TAB_Vetsi, TAB_Chyba, TAB_Vetsi},
 /* id */	{TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Vetsi, TAB_Chyba, TAB_Vetsi, TAB_Chyba, TAB_Vetsi},
 /* $ */		{TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Mensi, TAB_Chyba, TAB_Mensi, TAB_Chyba},
- 
+
 };
 
 unsigned int indexing (int i) {
-	
+
 	int id = 13;
 	if (i < O_ID)
 	{
@@ -174,7 +174,7 @@ prvkyPT changeToken (Token_t token) { // upravim si token z lexeru
 		case LEFT_BRACKET: return O_LevaZ;
 		case RIGHT_BRACKET: return O_PravaZ;
 		case ID: return O_ID;
-		
+
 		case tInt :
 		constant = 'i';
 		return O_ID;
@@ -198,14 +198,14 @@ typedef struct mstack {
 	tData * data;
 	prvkyPT type;
 } 	mstack_item;
- 
+
 
 typedef struct auxStack {
 	mstack_item * a;
 	int top;
 	int size;
 }	*tStack;
- 
+
 int SInit(tStack * S) {
 	if (((*S) =  malloc (sizeof (struct auxStack))) == NULL)
 	{
@@ -226,13 +226,13 @@ int SInit(tStack * S) {
 	}
 	return 0;
 }
- 
+
 void SDispose(tStack * S)
 {
 	free((*S)->a);
 	free(*S);
 }
- 
+
 void SPush(tStack * S, int ptr, tData *addr)
 {
 	if ((*S)->top >= (*S)->size)
@@ -244,7 +244,7 @@ void SPush(tStack * S, int ptr, tData *addr)
 	(*S)->a[(*S)->top].type= ptr;
 	(*S)->a[(*S)->top].data= addr;
 }
- 
+
 void SPush_term(tStack * S,int ptr, int adress)
 {
 	prvkyPT c;
@@ -259,7 +259,7 @@ void SPush_term(tStack * S,int ptr, int adress)
 	}
 	data = (*S)->a[(*S)->top].data;
 	c = (*S)->a[(*S)->top].type;
- 
+
 	(*S)->a[(*S)->top].data = NULL;
 	(*S)->a[(*S)->top].type=ptr;
 
@@ -304,7 +304,7 @@ int SFind_Term(tStack * S)
 	}
 	return (*S)->top-1;
 }
- 
+
 mstack_item STop_Term(tStack * S)
 {
 	int c;
@@ -338,7 +338,7 @@ int insertInt(int var, tData ** varinfo)
 	(*varinfo)->varValue.valueInt = var;
 	return 0;
 }
- 
+
 int insertDbl(double var, tData ** varinfo)
 {
 	string new;
@@ -359,7 +359,7 @@ int insertDbl(double var, tData ** varinfo)
 	(*varinfo)->varValue.valueDBL = var;
 	return 0;
 }
- 
+
 int insertStr(tData ** varinfo)
 {
 	string new;
@@ -396,7 +396,7 @@ int getExpr(tData **output)
 	mstack_item c;
 	mstack s;
 
-	SInit(&s);     
+	SInit(&s);
 	SPush(&s, O_Lt, NULL); // $ - zarazka
 	tData *varinfo;
 	prvkyPT term;
@@ -447,7 +447,7 @@ int getExpr(tData **output)
     	{
 			case TAB_Rovno: // push(a), precist symbol a ze vstupu
 			SPush(&s, a.type, varinfo);
-			b = STop_Term(&s);    
+			b = STop_Term(&s);
 			if ((token = getNextToken(&attr)) == ER_LEX)
 			{
 				SDispose(&s);
@@ -496,7 +496,7 @@ int getExpr(tData **output)
 				varinfo = NULL;
 			}
 			break;
-			
+
 			case TAB_Mensi: // zamenit vrchol b za b<, push(token), precist symbol a ze vstupu
 			term = SFind_Term(&s);
 			SPush_term(&s,PTLaver,term);
@@ -548,12 +548,12 @@ int getExpr(tData **output)
 			{
 				varinfo = NULL;
 			}
-			b = STop_Term(&s); 
+			b = STop_Term(&s);
 			break;
 
 
-			case TAB_Vetsi: // <y je na zasobniku, r: A → y ∈ P, pak zamenit <y za A, vypsat r 
-			d = STop(&s);      
+			case TAB_Vetsi: // <y je na zasobniku, r: A → y ∈ P, pak zamenit <y za A, vypsat r
+			d = STop(&s);
 			switch (d.type)
 			{
 				case O_ID:
@@ -687,7 +687,7 @@ int getExpr(tData **output)
 							*output = vysledek;
 							b = STop_Term(&s);
 							break;
-							
+
 							case O_Krat:
 
 							if ((m.data->varType == TYPE_INT) && (c.data->varType== TYPE_INT))
@@ -747,7 +747,7 @@ int getExpr(tData **output)
 							// TODO
 
 							break;
-							
+
 							case O_Vetsi:
 							if (generateInstruction(I_GREATER,m.data, c.data, vysledek))
 							{
@@ -781,7 +781,7 @@ int getExpr(tData **output)
 							b = STop_Term(&s);
 							break;
 
-							
+
 
 							case O_MensiRovno:
 							if (generateInstruction(I_LESSEQ, m.data, c.data, vysledek))
@@ -810,7 +810,7 @@ int getExpr(tData **output)
 							{
 								SDispose(&s);
 								return ER_INT;
-							}	
+							}
 							SPush(&s,PTE, vysledek);
 							*output = vysledek;
 							b = STop_Term(&s);
@@ -836,7 +836,7 @@ int getExpr(tData **output)
 			SDispose(&s);
 			return ER_SYN;
 			break;
- 
+
 			case TAB_Chyba:
 			if ((a.type == O_Lt) && (b.type == O_Lt))
 			{
@@ -854,9 +854,9 @@ int getExpr(tData **output)
 			}
 			break;
 		}
- 
+
 	} while ((a.type != O_Lt) || (b.type != O_Lt));
-	
+
 	if ((a.type == O_Lt) && (b.type == O_Lt))
 	{
 		result = SYNTAX_OK;
@@ -870,8 +870,8 @@ int getExpr(tData **output)
 // LL GRAMATIKA
 
 //2.	<dcllist> ->  <declarefunc> <dclist>
-//3.	<dcllist> ->  ε					
-//4.	<declarefunc> -> ε 
+//3.	<dcllist> ->  ε
+//4.	<declarefunc> -> ε
 //5.	<declarefunc> -> declare function id (<funcparam>) as <type> EOL
 //6.	<declarefunc> -> function id (<funcparam>) as <type> EOL <statements> end function EOL
 
@@ -884,18 +884,18 @@ int declrList()
 		{
 			return ER_LEX;
 		}
-		else if (token == ER_INT) 
+		else if (token == ER_INT)
 		{
 			return ER_INT;
 		}
 
-		if (strCmpConstStr(&attr, "function") == 0) 
+		if (strCmpConstStr(&attr, "function") == 0)
 		{
 			if ((token = getNextToken(&attr)) == ER_LEX) // declare function id
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -921,7 +921,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -938,7 +938,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -963,7 +963,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -980,7 +980,7 @@ int declrList()
 				{
 					strFree(&id);
 					return ER_INT;
-				}				
+				}
 				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
 				{
 					if (( result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
@@ -1037,7 +1037,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1051,7 +1051,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1061,13 +1061,13 @@ int declrList()
 
 	}
 
-	else if (strCmpConstStr(&attr, "function") == 0) 
+	else if (strCmpConstStr(&attr, "function") == 0)
 		{
 			if ((token = getNextToken(&attr)) == ER_LEX) // function id
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1093,7 +1093,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -1110,7 +1110,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -1135,7 +1135,7 @@ int declrList()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -1152,7 +1152,7 @@ int declrList()
 				{
 					strFree(&id);
 					return ER_INT;
-				}				
+				}
 				if ((strCmpConstStr(&attr, "integer") == 0)) // integer
 				{
 					if ((result = BSTInsert(TbSmBST, &id, TYPE_INT)) == -1 ) // vlozime do tab symbolu
@@ -1209,7 +1209,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1223,7 +1223,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1239,7 +1239,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1250,7 +1250,7 @@ int declrList()
 				{
 					return ER_LEX;
 				}
-				else if (token == ER_INT) 
+				else if (token == ER_INT)
 				{
 					return ER_INT;
 				}
@@ -1261,7 +1261,7 @@ int declrList()
 					{
 						return ER_LEX;
 					}
-					else if (token == ER_INT) 
+					else if (token == ER_INT)
 					{
 						return ER_INT;
 					}
@@ -1275,7 +1275,7 @@ int declrList()
 					{
 						return ER_LEX;
 					}
-					else if (token == ER_INT) 
+					else if (token == ER_INT)
 					{
 						return ER_INT;
 					}
@@ -1300,7 +1300,7 @@ int declrList()
 			{
 				return ER_LEX;
 			}
-				else if (token == ER_INT) 
+				else if (token == ER_INT)
 			{
 				return ER_INT;
 			} */
@@ -1313,7 +1313,7 @@ int declrList()
 	}
 }
 
-//7.	<funcparam> -> id as <type> <funcparam_n> 
+//7.	<funcparam> -> id as <type> <funcparam_n>
 //8.	<funcparam> -> ε
 //9.	<funcparam_n> -> ε
 //10.	<funcparam_n> -> , id as <type> <funcparam_n>
@@ -1337,7 +1337,7 @@ int funcParam()
 		strFree(&id);
 		return ER_LEX;
 	}
-	else if (token == ER_INT) 
+	else if (token == ER_INT)
 	{
 		strFree(&id);
 		return ER_INT;
@@ -1416,7 +1416,7 @@ int funcParam()
 			{
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				return ER_INT;
 			}
@@ -1460,7 +1460,7 @@ int statements()
 	{
 		return ER_LEX;
 	}
-	else if (token == ER_INT) 
+	else if (token == ER_INT)
 	{
 		return ER_INT;
 	}
@@ -1468,7 +1468,7 @@ int statements()
 	if (token == EQUAL)
 	{
 
-		
+
 	}
 
 	if (token != EOL)
@@ -1480,7 +1480,7 @@ int statements()
 	{
 		return ER_LEX;
 	}
-	else if (token == ER_INT) 
+	else if (token == ER_INT)
 	{
 		return ER_INT;
 	}
@@ -1557,7 +1557,7 @@ int statement()
 
 	else if (token == KEYWORD)
 	{
-		
+
 		if ((strCmpConstStr(&attr, "dim") == 0)) // dim
 		{
 			if ((token = getNextToken(&attr)) == ER_LEX) // dim id
@@ -1572,7 +1572,7 @@ int statement()
 			{
 				return ER_SYN;
 			}
-// TODO overit existenci			
+// TODO overit existenci
 			string id;
 			if (strInit(&id))
 			{
@@ -1589,7 +1589,7 @@ int statement()
 				strFree(&id);
 				return ER_LEX;
 			}
-			else if (token == ER_INT) 
+			else if (token == ER_INT)
 			{
 				strFree(&id);
 				return ER_INT;
@@ -1700,7 +1700,7 @@ int statement()
 				return ER_SYN;
 			}
 		}
-		
+
 
 		else if ((strCmpConstStr(&attr, "input") == 0))
 		{
@@ -1810,14 +1810,14 @@ int statement()
       			return result;
       		}
 
-			void *addrOfIfNotGoto; 
+			void *addrOfIfNotGoto;
 
 			// pokud je expr false, skaceme na konec
 			// nagenerujeme instrukci podmineneho skoku a ulozime jeji adresu,
       		// protoze pozdeji bude potreba doplnit adresu skoku, kam skakat
 
 			if (generateInstruction(I_IFNOTGOTO, (void*) newVariableInfo, NULL, NULL))
-			{	
+			{
 				return ER_INT;
 			}
 			addrOfIfNotGoto = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
@@ -1837,7 +1837,7 @@ int statement()
 			}
 
 			if (token != EOL)
-			{		
+			{
 				return ER_SYN;
 			}
 
@@ -1893,7 +1893,7 @@ int statement()
 			}
 
 			if (token != EOL)
-			{		
+			{
 				return ER_SYN;
 			}
 
@@ -1954,7 +1954,7 @@ int statement()
 			}
 
 			if (token != EOL)
-			{		
+			{
 				return ER_SYN;
 			}
 
@@ -1972,7 +1972,7 @@ int statement()
 				return ER_INT;
 			}
 
-			if (strCmpConstStr(&attr, "while") != 0) 
+			if (strCmpConstStr(&attr, "while") != 0)
 			{
 				return ER_SYN;
 			}
@@ -1995,7 +1995,7 @@ int statement()
 			// navesti za while, ulozime adresu navesti do addrOfLab1
 			void *addrOfLab1;
 			addrOfLab1 = listGetPointerLast(list); // vrati ukazatel na posledni instrukci
- 
+
 			// nagenerujeme inikatni nazev promenne pro vysledek vyrazu a vlozime
 			// do tabulky symbolu
 			string newVar;
@@ -2037,7 +2037,7 @@ int statement()
         	}
 
       		addrOfIfGoto = listGetPointerLast(list);
- 
+
       		if (token != EOL)
       		{
       			return ER_SYN;
@@ -2063,7 +2063,7 @@ int statement()
       		{
         		return ER_INT;
       		}
- 
+
       		// nagenerujeme instrukci druheho navesti
       		if(generateInstruction(I_LAB, NULL, NULL, NULL))
         	{
@@ -2071,7 +2071,7 @@ int statement()
         	}
       		void *addrOfLab2;
       		addrOfLab2 = listGetPointerLast(list);// ulozime si ukazatel na posledni instr.
- 
+
       		// jiz zname adresu druheho navesti, muzeme tedy nastavit adresu
       		// do drive generovane instrukce podmineneho skoku
       		// nastavime aktualni instrukci podle adresy instrukce ifnotgoto
@@ -2096,24 +2096,24 @@ int statement()
 			}
 
 			if (token != EOL)
-			{		
+			{
 				return ER_SYN;
 			}
 
 			return SYNTAX_OK;
 		}
-		
+
 		else if ((strCmpConstStr(&attr, "return") == 0))
 		{
 
 		}
-		
-	
+
+
 		else
-		{	
+		{
 			return ER_SYN;
-		}		
-		
+		}
+
 
 	}
 
@@ -2158,7 +2158,7 @@ int assignment(tData **var1,tData **var2)
 int exprlist()
 {
 	if (token != EOL) // jeste neni konec
-	{	
+	{
 		tData *data;
 		int ret;
 		if ((ret = getExpr(data)) != 0) // zavolam PA
@@ -2180,7 +2180,7 @@ int exprlist()
 			return ER_SYN;
 		}
 
-// TODO gen instrukci vypsani dat		
+// TODO gen instrukci vypsani dat
 
 		if ((token = getNextToken(&attr)) == ER_LEX) // bud EOF nebo dalsi expr
 		{
@@ -2196,7 +2196,7 @@ int exprlist()
 	else // token je EOL, koncime
 	{
 		return SYNTAX_OK;
-		
+
 	}
 }
 
@@ -2219,7 +2219,7 @@ int inParam()
 
 
 
-// 11.	<body> -> Scope <statements> end scope EOL 
+// 11.	<body> -> Scope <statements> end scope EOL
 int mainList()
 {
 	if (token == KEYWORD)
@@ -2252,7 +2252,7 @@ int mainList()
 				}
 				if ((strCmpConstStr(&attr, "scope") == 0))
 				{
-					// TODO 
+					// TODO
 					return SYNTAX_OK;
 
 				}
@@ -2282,7 +2282,7 @@ int program()
 	int result = 0;
 	switch (token)
 	{
-		case KEYWORD:  
+		case KEYWORD:
 		if ((strCmpConstStr(&attr, "declare") == 0) || (strCmpConstStr(&attr, "function") == 0) || (strCmpConstStr(&attr, "scope") == 0))
 		{
 			result = declrList();
@@ -2316,7 +2316,7 @@ int program()
 
 
 // parser, bere na vstup tabulku symbolu a seznam instrukci
-int parse(tBSTNodePtr *tb, tListOfInstr *instrList) 
+int parse(tBSTNodePtr *tb, tListOfInstr *instrList)
 {
 	int result = 0;
 	TbSmBST = tb;

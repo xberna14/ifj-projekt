@@ -1,11 +1,11 @@
-/*
-** 		_
-**     |
-** |___|___
-**     |   | 
-**	  _|
-**
-*/
+/**
+IFJ PROJEKT 2017
+Prekladac jazyka IFJ17
+Autori: Dominik Peza (xpezad00)
+		Matej Havlas (xhavla06)
+        Radoslav Bernath (xberna14)
+        Marek Hornak (xhorna13)
+ */
 
 #define ER_SYN 2
 #define ER_SEM_P 3
